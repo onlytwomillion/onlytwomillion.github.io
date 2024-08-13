@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VS Code-like Editor</title>
+     <link rel="icon" href="icon.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.37.0/min/vs/editor/editor.main.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #1e1e1e; /* Dark theme background */
+            color: #dcdcdc; /* Light text color */
+        }
+
+        #container {
+            display: flex;
+            flex: 1;
+            position: relative;
+        }
+
+        #editor-container, #output {
+            flex: 1;
+            padding: 10px;
+            box-sizing: border-box;
+            min-width: 0;
+        }
+
+        #editor-container {
+            border-right: 1px solid #333; /* Darker border for editor */
+        }
+
+        #output {
+            background-color: #000; /* Black background for output */
+            border-left: 1px solid #333; /* Darker border for output */
+        }
+
+        .resizer {
+            width: 5px;
+            background: #333;
+            cursor: ew-resize;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            z-index: 10;
+        }
+
+        .resizer:hover {
+            background: #555;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #1e1e1e;
+            color: #dcdcdc;
+            border-top: 1px solid #333;
+        }
+
+        #editor {
+            height: 100%;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        #controls {
+            padding: 10px;
+            background-color: #333;
+            border-bottom: 1px solid #444;
+        }
+
+        #controls button {
+            margin-right: 10px;
+        }
+
+        #plus-icon {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: #333;
+            color: #dcdcdc;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 20;
+        }
+
+        #links-menu {
+            display: none;
+            position: fixed;
+            bottom: 70px;
+            left: 20px;
+            background-color: #333;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            z-index: 20;
+        }
+
+        #links-menu a {
+            color: #dcdcdc;
+            text-decoration: none;
+            display: block;
+            padding: 5px 0;
+        }
+
+        #links-menu a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="editor-container">
+            <div id="editor"></div>
+        </div>
+        <div id="resizer" class="resizer"></div>
+        <div id="output">
+            <iframe id="outputFrame"></iframe>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2024 Your Website. All rights reserved.</p>
+    </footer>
+
+    <div id="plus-icon">+</div>
+    <div id="links-menu">
+        <a href="https://www.example1.com" target="_blank">Example 1</a>
+        <a href="https://www.example2.com" target="_blank">Example 2</a>
+        <a href="https://www.example3.com" target="_blank">Example 3</a>
+        <a href="https://www.example4.com" target="_blank">Example 4</a>
+        <a href="https://www.example5.com" target="_blank">Example 5</a>
+    </div>
+
+    <!-- Monaco Editor Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.37.0/min/vs/loader.js"></script>
+    <script>
+        // Monaco Editor initialization
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.37.0/min/vs' }});
+        require(['vs/editor/editor.main'], function () {
+            const editor = monaco.editor.create(document.getElementById('editor'), {
+                value: `<!DOCTYPE html>\n<html>\n<head>\n    <title>Document</title>\n    <style>\n        body { font-family: Arial, sans-serif; }\n    </style>\n</head>\n<body>\n    <h1>Hello, World!</h1>\n</body>\n</html>`,
+                language: 'html',
+                theme: 'vs-dark'
+            });
+
+            // Function to update the iframe content
+            function updateOutput() {
+                const code = editor.getValue();
+                const outputFrame = document.getElementById("outputFrame").contentWindow.document;
+                outputFrame.open();
+                outputFrame.write(code);
+                outputFrame.close();
+            }
+
+            // Initial update
+            updateOutput();
+
+            // Update output on content change
+            editor.onDidChangeModelContent(updateOutput);
+
+            // Function to save the code to localStorage
+            window.saveCode = function() {
+                const code = editor.getValue();
+                localStorage.setItem('savedCode', code);
+                alert('Code saved successfully!');
+            };
+
+            // Function to load the code from localStorage
+            window.loadCode = function() {
+                const savedCode = localStorage.getItem('savedCode');
+                if (savedCode) {
+                    editor.setValue(savedCode);
+                } else {
+                    alert('No saved code found.');
+                }
+            };
+
+            // Custom completion provider
+            monaco.languages.registerCompletionItemProvider('html', {
+                provideCompletionItems: function(model, position) {
+                    const suggestions = [
+                        {
+                            label: 'myCustomTag',
+                            kind: monaco.languages.CompletionItemKind.Snippet,
+                            insertText: '<my-custom-tag>$0</my-custom-tag>',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                            documentation: 'A custom HTML tag'
+                        },
+                        {
+                            label: 'header',
+                            kind: monaco.languages.CompletionItemKind.Keyword,
+                            insertText: '<header>\n    $0\n</header>',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                            documentation: 'HTML header element'
+                        },
+                        {
+                            label: 'footer',
+                            kind: monaco.languages.CompletionItemKind.Keyword,
+                            insertText: '<footer>\n    $0\n</footer>',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                            documentation: 'HTML footer element'
+                        }
+                    ];
+                    return { suggestions: suggestions };
+                }
+            });
+        });
+
+        // Add event listener to the resizer
+        const resizer = document.getElementById('resizer');
+        const editorContainer = document.getElementById('editor-container');
+        const outputDiv = document.getElementById('output');
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', () => {
+                isResizing = false;
+                document.removeEventListener('mousemove', handleMouseMove);
+            });
+        });
+
+        function handleMouseMove(e) {
+            if (isResizing) {
+                const containerWidth = document.getElementById('container').offsetWidth;
+                const newWidth = e.clientX - editorContainer.getBoundingClientRect().left;
+                const minWidth = 100; // Minimum width of editor and output
+
+                if (newWidth > minWidth && newWidth < containerWidth - minWidth) {
+                    editorContainer.style.width = `${newWidth}px`;
+                    outputDiv.style.width = `${containerWidth - newWidth - resizer.offsetWidth}px`;
+                }
+            }
+        }
+
+        // Toggle the display of the links menu and add download functionality
+        document.getElementById('plus-icon').addEventListener('click', function() {
+            const menu = document.getElementById('links-menu');
+            menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+        });
+
+        // Function to download the code from the editor as an HTML file
+        function downloadCode() {
+            const code = editor.getValue();
+            const blob = new Blob([code], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'code.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Add download functionality to the plus icon
+        document.getElementById('plus-icon').addEventListener('dblclick', downloadCode);
+    </script>
+      <script>
+
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+    
+    // 1. Lazy Loading Images
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+        img.setAttribute('loading', 'lazy');
+    });
+
+    // 2. Defer Non-Critical JavaScript
+    const scripts = document.querySelectorAll('script[data-defer="true"]');
+    scripts.forEach(script => {
+        const newScript = document.createElement('script');
+        newScript.src = script.src;
+        newScript.defer = true;
+        document.body.appendChild(newScript);
+    });
+
+    // 3. Minify JavaScript
+    // Minified code example (already minimized)
+    (function(){console.log("Minified JavaScript loaded!")})();
+
+    // 4. Cache Control Header
+    const metaCacheControl = document.createElement('meta');
+    metaCacheControl.httpEquiv = 'Cache-Control';
+    metaCacheControl.content = 'max-age=31536000, must-revalidate';
+    document.head.appendChild(metaCacheControl);
+
+    // 5. Asynchronous JavaScript Loading
+    const asyncScripts = document.querySelectorAll('script[data-async="true"]');
+    asyncScripts.forEach(script => {
+        const newScript = document.createElement('script');
+        newScript.src = script.src;
+        newScript.async = true;
+        document.body.appendChild(newScript);
+    });
+
+});
+
+// 6. Inline Critical CSS (can be included directly in your HTML file)
+const style = document.createElement('style');
+style.innerHTML = `
+    body { font-family: Arial, sans-serif; }
+    header { background-color: #333; color: #fff; padding: 20px; text-align: center; }
+`;
+document.head.appendChild(style);
+
+    </script>
+</body>
+</html>

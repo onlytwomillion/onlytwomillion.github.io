@@ -1,0 +1,136 @@
+   body {
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            background-color: #1e1e1e; /* Dark background */
+            color: #00ff00; /* Bright text color */
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+        .DRILL{
+            text-align: center;
+            
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #000; /* Black background */
+            color: #00ff00; /* Bright text color */
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            box-shadow: 2px 0 5px rgba(0, 255, 0, 0.5);
+            position: relative;
+            overflow: auto;
+            transition: width 0.3s;
+        }
+        .resize-handle {
+            width: 10px;
+            height: 100%;
+            background-color: #00ff00;
+            position: absolute;
+            right: 0;
+            top: 0;
+            cursor: ew-resize;
+            z-index: 1;
+        }
+        .sidebar h2 {
+            margin-top: 0;
+            color: #00ff00; /* Bright text color */
+        }
+        .sidebar a {
+            color: #00ff00; /* Bright text color */
+            text-decoration: none;
+            padding: 20px;
+            display: block;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            transition: background 0.3s;
+        }
+        .sidebar a:hover {
+            background-color: #005700; /* Dark green hover effect */
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            background-color: #2d2d2d; /* Dark background */
+            color: #00ff00; /* Bright text color */
+            overflow-y: auto;
+        }
+        .search-box {
+            margin-bottom: 20px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #00ff00; /* Bright border */
+            border-radius: 4px;
+            background-color: #1e1e1e; /* Dark input background */
+            color: #00ff00; /* Bright text color */
+        }
+        .search-box input::placeholder {
+            color: #00ff00; /* Bright placeholder text color */
+        }
+        #searchResults p {
+            margin: 5px 0;
+            padding: 5px;
+            background-color: #333; /* Slightly lighter background */
+            border-radius: 4px;
+        }
+        #searchResults a {
+            color: #00ff00; /* Bright text color */
+            text-decoration: none;
+        }
+        #searchResults a:hover {
+            text-decoration: underline;
+        }
+        footer {
+            background-color: #000; /* Black background */
+            color: #00ff00; /* Bright text color */
+            text-align: center;
+            padding: 10px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            box-shadow: 0 -2px 5px rgba(0, 255, 0, 0.5);
+        }
+       
+        .highlight {
+            background-color: #005700; /* Highlight background */
+            text-decoration: underline; /* Underline text */
+        }
+        .gill {
+            font-size: 20px;
+            background-color: antiquewhite;
+        }
+        .gills{
+            background-color: #f0e7e7;
+            font-size: 0px;
+        }
+           
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                overflow: hidden;
+                transition: width 0.3s;
+            }
+            .sidebar.show {
+                width: 250px; /* Or your desired width */
+            }
+            #toggleSidebar {
+                display: block;
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                z-index: 1000; /* Ensure it's on top */
+            }
+        }
+        @media (min-width: 769px) {
+            #toggleSidebar {
+                display: none; /* Hide button on larger screens */
+            }
+        }

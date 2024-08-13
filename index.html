@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="login.css">
+     <link rel="icon" href="icon.png" type="image/png">
+</head>
+<body>
+    <div class="login-container">
+        <div class="message-container">
+            <p id="message"></p>
+        </div>
+        <h2>Login</h2>
+        <form id="loginForm">
+            <label for="username">Username</label>
+            <input type="text" id="username" required>
+            <label for="password">Password</label>
+            <input type="password" id="password" required>
+            <button type="submit">Login</button>
+            <p id="errorMessage" class="error-message"></p>
+        </form>
+    </div>
+
+    <footer>
+        &copy; <span id="year"></span> 2EM_DRILL. All rights reserved.
+    </footer>
+
+    <script src="login.js"></script>
+      <script>
+
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+    
+    // 1. Lazy Loading Images
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+        img.setAttribute('loading', 'lazy');
+    });
+
+    // 2. Defer Non-Critical JavaScript
+    const scripts = document.querySelectorAll('script[data-defer="true"]');
+    scripts.forEach(script => {
+        const newScript = document.createElement('script');
+        newScript.src = script.src;
+        newScript.defer = true;
+        document.body.appendChild(newScript);
+    });
+
+    // 3. Minify JavaScript
+    // Minified code example (already minimized)
+    (function(){console.log("Minified JavaScript loaded!")})();
+
+    // 4. Cache Control Header
+    const metaCacheControl = document.createElement('meta');
+    metaCacheControl.httpEquiv = 'Cache-Control';
+    metaCacheControl.content = 'max-age=31536000, must-revalidate';
+    document.head.appendChild(metaCacheControl);
+
+    // 5. Asynchronous JavaScript Loading
+    const asyncScripts = document.querySelectorAll('script[data-async="true"]');
+    asyncScripts.forEach(script => {
+        const newScript = document.createElement('script');
+        newScript.src = script.src;
+        newScript.async = true;
+        document.body.appendChild(newScript);
+    });
+
+});
+
+// 6. Inline Critical CSS (can be included directly in your HTML file)
+const style = document.createElement('style');
+style.innerHTML = `
+    body { font-family: Arial, sans-serif; }
+    header { background-color: #333; color: #fff; padding: 20px; text-align: center; }
+`;
+document.head.appendChild(style);
+
+    </script>
+</body>
+</html>

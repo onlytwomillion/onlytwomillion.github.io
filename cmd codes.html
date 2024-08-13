@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>prompt commands info</title>
+   <link rel="icon" href="icon.png" type="image/png">
+
+  <style>
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      background-color: #1e1e1e;
+      color: #00ff00;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    .terminal-container {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .terminal {
+      width: 80%;
+      height: 80%;
+      background-color: #000;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-y: auto;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+    }
+    .input-line {
+      display: flex;
+    }
+    .prompt {
+      flex-shrink: 0;
+    }
+    .input {
+      flex-grow: 1;
+      background: none;
+      border: none;
+      color: #00ff00;
+      outline: none;
+      caret-color: #00ff00;
+      font-family: inherit;
+      font-size: inherit;
+    }
+    .output {
+      margin: 5px 0;
+     
+    }
+    .outputb{
+      text-align: center;
+    }
+    .error {
+      color: red;
+    }
+    .password-prompt {
+      display: none;
+      color: #00ff00;
+      margin-top: 10px;
+    }
+    .password-prompt input {
+      color: #00ff00;
+    }
+  </style>
+</head>
+<body>
+  <div class="terminal-container">
+    <div class="terminal" id="terminal">
+      <div class="outputb">Welcome to 2em_drill.</div>
+      <div class="password-prompt" id="password-prompt">
+        <span class="prompt">Password: </span>
+        <input type="password" id="password-input" class="input" autofocus autocomplete="off">
+        <div id="password-error" class="error"></div>
+      </div>
+      <div class="input-line">
+        <span class="prompt">user@web-terminal:~$ </span>
+        <input type="text" class="input" id="input" autofocus autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const terminal = document.getElementById('terminal');
+    const input = document.getElementById('input');
+    const passwordPrompt = document.getElementById('password-prompt');
+    const passwordInput = document.getElementById('password-input');
+    const passwordError = document.getElementById('password-error');
+    
+    const password = '1234';
+    const commands = {
+      check: 'check commands:  , exit, ipconfig, ipconfig/all, netsh wlan show profile "wifi-name" key=clear, ping, netstat, nslookup, ifconfig,curl "ipinfo.io/(41.186.78.73(ipaddre))?token=aa9bfe430cb498"',
+      echo: args => args.join(' '),
+      clear: () => '',
+      ls: 'Documents  Downloads  Music  Pictures  Videos',
+      pwd: '/home/user',
+      date: () => new Date().toString(),
+      whoami: 'user',
+      uname: 'Linux web-terminal 5.4.0-42-generic x86_64 GNU/Linux',
+      exit: () => 'Command not available in the web simulation.',
+      ipconfig: () => 'Simulated output of ipconfig',
+      'ipconfig/all': () => 'Simulated output of ipconfig /all',
+      'netsh wlan show profile "wifi-name" key=clear': () => 'Simulated output of netsh wlan show profile "wifi-name" key=clear',
+      ping: () => 'Simulated output of ping',
+      traceroute: () => 'Simulated output of traceroute',
+      netstat: () => 'Simulated output of netstat',
+      arp: () => 'Simulated output of arp',
+      nslookup: () => 'Simulated output of nslookup',
+      route: () => 'Simulated output of route',
+      ifconfig: () => 'Simulated output of ifconfig',
+      'ip route': () => 'Simulated output of ip route',
+      'ip addr': () => 'Simulated output of ip addr',
+      iwconfig: () => 'Simulated output of iwconfig',
+      'ip link': () => 'Simulated output of ip link',
+      'ip a': () => 'Simulated output of ip a',
+      nmcli: () => 'Simulated output of nmcli',
+      iwlist: () => 'Simulated output of iwlist',
+      iwdev: () => 'Simulated output of iw dev',
+      ss: () => 'Simulated output of ss',
+      ethtool: () => 'Simulated output of ethtool',
+      mtr: () => 'Simulated output of mtr',
+      curl: () => 'Simulated output of curl',
+      wget: () => 'Simulated output of wget',
+      dig: () => 'Simulated output of dig',
+      whois: () => 'Simulated output of whois',
+      nmap: () => 'Simulated output of nmap',
+      tcpdump: () => 'Simulated output of tcpdump',
+      back: () => {
+        window.location.href = 'WELCOME.html'; 
+      }
+    };
+
+    let commandHistory = [];
+    let historyIndex = -1;
+    let passwordAuthenticated = false;
+
+    input.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        if (!passwordAuthenticated) {
+          passwordPrompt.style.display = 'block';
+          passwordInput.focus();
+        } else {
+          executeCommand(input.value);
+          input.value = '';
+          commandHistory.push(input.value);
+          historyIndex = commandHistory.length;
+        }
+      } else if (event.key === 'ArrowUp') {
+        if (historyIndex > 0) {
+          historyIndex--;
+          input.value = commandHistory[historyIndex];
+        }
+      } else if (event.key === 'ArrowDown') {
+        if (historyIndex < commandHistory.length - 1) {
+          historyIndex++;
+          input.value = commandHistory[historyIndex];
+        } else {
+          historyIndex = commandHistory.length;
+          input.value = '';
+        }
+      }
+    });
+
+    passwordInput.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        if (passwordInput.value === password) {
+          passwordAuthenticated = true;
+          passwordPrompt.style.display = 'none';
+          passwordError.innerText = '';
+          input.focus();
+        } else {
+          passwordInput.value = '';
+          passwordError.innerText = 'Incorrect password. Try again.';
+        }
+      }
+    });
+
+    function executeCommand(commandLine) {
+      const [command, ...args] = commandLine.split(' ');
+      const outputElement = document.createElement('div');
+      outputElement.classList.add('output');
+      
+      if (command in commands) {
+        const result = typeof commands[command] === 'function' ? commands[command](args) : commands[command];
+        outputElement.innerHTML = `<span class="prompt">user@web-terminal:~$ </span>${commandLine}<br>${result}`;
+      } else {
+        outputElement.innerHTML = `<span class="prompt">user@web-terminal:~$ </span>${commandLine}<br><span class="error">Command not found: ${command}</span>`;
+      }
+
+      terminal.insertBefore(outputElement, terminal.querySelector('.input-line'));
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+  </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+    
+    // 1. Lazy Loading Images
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+        img.setAttribute('loading', 'lazy');
+    });
+
+    // 2. Defer Non-Critical JavaScript
+    const scripts = document.querySelectorAll('script[data-defer="true"]');
+    scripts.forEach(script => {
+        const newScript = document.createElement('script');
+        newScript.src = script.src;
+        newScript.defer = true;
+        document.body.appendChild(newScript);
+    });
+
+    // 3. Minify JavaScript
+    // Minified code example (already minimized)
+    (function(){console.log("Minified JavaScript loaded!")})();
+
+    // 4. Cache Control Header
+    const metaCacheControl = document.createElement('meta');
+    metaCacheControl.httpEquiv = 'Cache-Control';
+    metaCacheControl.content = 'max-age=31536000, must-revalidate';
+    document.head.appendChild(metaCacheControl);
+
+    // 5. Asynchronous JavaScript Loading
+    const asyncScripts = document.querySelectorAll('script[data-async="true"]');
+    asyncScripts.forEach(script => {
+        const newScript = document.createElement('script');
+        newScript.src = script.src;
+        newScript.async = true;
+        document.body.appendChild(newScript);
+    });
+
+});
+
+// 6. Inline Critical CSS (can be included directly in your HTML file)
+const style = document.createElement('style');
+style.innerHTML = `
+    body { font-family: Arial, sans-serif; }
+    header { background-color: #333; color: #fff; padding: 20px; text-align: center; }
+`;
+document.head.appendChild(style);
+
+    </script>
+</body>
+</html>

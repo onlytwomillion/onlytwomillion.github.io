@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="welcome.css">
+     <link rel="icon" href="icon.png" type="image/png">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="resize-handle" id="resizeHandle"></div>
+            <h2>Controls</h2>
+            <div id="menuList"></div>
+          <a href="index.html.html"><button class="gill" id="logoutButton">Logout</button></a>  
+        </div>
+        <button id="toggleSidebar" class="gills">Turn</button>
+        <div class="main-content" id="mainContent">
+            <h1 class="DRILL">Welcome to 2EM_DRILL </h1>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search...">
+            </div>
+            <div id="searchResults"></div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; <span id="year"></span> 2EM_DRILL. All rights reserved.
+    </footer>
+
+    <script src="searchengine.js"></script>
+    <script>
+
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+    
+    // 1. Lazy Loading Images
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+        img.setAttribute('loading', 'lazy');
+    });
+
+    // 2. Defer Non-Critical JavaScript
+    const scripts = document.querySelectorAll('script[data-defer="true"]');
+    scripts.forEach(script => {
+        const newScript = document.createElement('script');
+        newScript.src = script.src;
+        newScript.defer = true;
+        document.body.appendChild(newScript);
+    });
+
+    // 3. Minify JavaScript
+    // Minified code example (already minimized)
+    (function(){console.log("Minified JavaScript loaded!")})();
+
+    // 4. Cache Control Header
+    const metaCacheControl = document.createElement('meta');
+    metaCacheControl.httpEquiv = 'Cache-Control';
+    metaCacheControl.content = 'max-age=31536000, must-revalidate';
+    document.head.appendChild(metaCacheControl);
+
+    // 5. Asynchronous JavaScript Loading
+    const asyncScripts = document.querySelectorAll('script[data-async="true"]');
+    asyncScripts.forEach(script => {
+        const newScript = document.createElement('script');
+        newScript.src = script.src;
+        newScript.async = true;
+        document.body.appendChild(newScript);
+    });
+
+});
+
+// 6. Inline Critical CSS (can be included directly in your HTML file)
+const style = document.createElement('style');
+style.innerHTML = `
+    body { font-family: Arial, sans-serif; }
+    header { background-color: #333; color: #fff; padding: 20px; text-align: center; }
+`;
+document.head.appendChild(style);
+
+    </script>
+    
+</body>
+</html>

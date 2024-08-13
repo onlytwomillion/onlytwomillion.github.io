@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Audio Mastering App</title>
+     <link rel="icon" href="icon.png" type="image/png">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            margin: 20px;
+            width: 90%;
+        }
+        .big{
+            font-size: 20px;
+        }
+        .ch{
+         background-color: #121212;
+         color: antiquewhite;
+        }
+        .controls {
+            width: 250px;
+            padding: 20px;
+            background-color: #1f1f1f;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+        }
+        .control-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="range"] {
+            width: 100%;
+            accent-color: #ff6b6b;
+        }
+        button {
+            background-color: #ff6b6b;
+            border: none;
+            color: #121212;
+            padding: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #e55a5a;
+        }
+       
+        canvas {
+            flex: 1;
+            margin: 20px;
+            border: 1px solid #ff6b6b;
+            border-radius: 8px;
+            background-color: #202020;
+        }
+        .timer {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        footer {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 14px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+           
+        }
+    </style>
+</head>
+<body>
+    <h1>Web Audio Mastering App</h1>
+    <div class="container">
+        <div class="controls">
+       
+            <div class="control-group">
+                <label for="audioFile">Upload Audio</label>
+                <input type="file"class="big" id="audioFile" accept="audio/*">
+            </div>
+            <div class="control-group">
+                <label for="eqLowGain">Low EQ Gain (Bass)</label>
+                <input type="range" id="eqLowGain" min="-40" max="40" value="0">
+            </div>
+            <div class="control-group">
+                <label for="eqMidGain">Mid EQ Gain</label>
+                <input type="range" id="eqMidGain" min="-40" max="40" value="0">
+            </div>
+            <div class="control-group">
+                <label for="eqHighGain">High EQ Gain (Treble)</label>
+                <input type="range" id="eqHighGain" min="-40" max="40" value="0">
+            </div>
+            <div class="control-group">
+                <label for="compression">Compression Ratio</label>
+                <input type="range" id="compression" min="1" max="20" value="1">
+            </div>
+            <div class="control-group">
+                <label for="masterGain">Master Gain</label>
+                <input type="range" id="masterGain" min="-20" max="20" value="0">
+            </div>
+            <div class="control-group">
+                <label for="speedControl">Playback Speed</label>
+                <input type="range" id="speedControl" min="0.5" max="2" step="0.1" value="1">
+            </div>
+            <div class="control-group">
+                <button onclick="toggleAutoTune()"class="ch">Toggle Auto-Tune</button>
+            </div>
+          
+            <button onclick="playAudio()"class="ch">Play Audio</button>
+            <button onclick="stopAudio()"class="ch">Stop Audio</button>
+            <button onclick="startRecording()"class="ch">Start Recording</button>
+            <button onclick="stopRecording()"class="ch">Stop Recording</button>
+            <div class="timer" id="timer">Recording Time: 00:00</div>
+        </div>
+        <canvas id="visualizationCanvas" width="800" height="300"></canvas>
+    </div>
+
+    <script>
+        let audioContext;
+        let audioBuffer;
+        let sourceNode;
+        let destination;
+        let mediaRecorder;
+        let recordedChunks = [];
+        let eqLowNode, eqMidNode, eqHighNode;
+        let compressor;
+        let gainNode;
+        let analyser;
+        let autoTuneEnabled = false;
+        let recordingInterval;
+        let recordingStartTime;
+        const canvas = document.getElementById('visualizationCanvas');
+        const canvasCtx = canvas.getContext('2d');
+
+        document.getElementById('audioFile').addEventListener('change', handleFileSelect);
+        document.getElementById('eqLowGain').addEventListener('input', updateEQLow);
+        document.getElementById('eqMidGain').addEventListener('input', updateEQMid);
+        document.getElementById('eqHighGain').addEventListener('input', updateEQHigh);
+        document.getElementById('compression').addEventListener('input', updateCompression);
+        document.getElementById('masterGain').addEventListener('input', updateGain);
+        document.getElementById('speedControl').addEventListener('input', updateSpeed);
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (!audioContext) {
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    audioContext.decodeAudioData(e.target.result, function(buffer) {
+                        audioBuffer = buffer;
+                        setupAudioNodes();
+                        drawVisualization();
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        function setupAudioNodes() {
+            if (sourceNode) {
+                sourceNode.disconnect();
+            }
+            if (eqLowNode) {
+                eqLowNode.disconnect();
+            }
+            if (eqMidNode) {
+                eqMidNode.disconnect();
+            }
+            if (eqHighNode) {
+                eqHighNode.disconnect();
+            }
+            if (compressor) {
+                compressor.disconnect();
+            }
+            if (gainNode) {
+                gainNode.disconnect();
+            }
+
+            sourceNode = audioContext.createBufferSource();
+            sourceNode.buffer = audioBuffer;
+
+            // EQ Nodes for different frequency ranges
+            eqLowNode = audioContext.createBiquadFilter();
+            eqLowNode.type = 'lowshelf';
+            eqLowNode.frequency.value = 100;
+
+            eqMidNode = audioContext.createBiquadFilter();
+            eqMidNode.type = 'peaking';
+            eqMidNode.frequency.value = 1000;
+            eqMidNode.Q.value = 1;
+
+            eqHighNode = audioContext.createBiquadFilter();
+            eqHighNode.type = 'highshelf';
+            eqHighNode.frequency.value = 5000;
+
+            compressor = audioContext.createDynamicsCompressor();
+            gainNode = audioContext.createGain();
+
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 2048;
+
+            destination = audioContext.createMediaStreamDestination();
+
+            sourceNode.connect(eqLowNode);
+            eqLowNode.connect(eqMidNode);
+            eqMidNode.connect(eqHighNode);
+            eqHighNode.connect(compressor);
+            compressor.connect(gainNode);
+            gainNode.connect(analyser);
+            gainNode.connect(audioContext.destination);
+            gainNode.connect(destination);
+
+            if (autoTuneEnabled) {
+                // Simulated Auto-Tune effect placeholder
+            }
+        }
+
+        function updateEQLow() {
+            const eqGain = parseFloat(document.getElementById('eqLowGain').value);
+            if (eqLowNode) {
+                eqLowNode.gain.value = eqGain;
+            }
+        }
+
+        function updateEQMid() {
+            const eqGain = parseFloat(document.getElementById('eqMidGain').value);
+            if (eqMidNode) {
+                eqMidNode.gain.value = eqGain;
+            }
+        }
+
+        function updateEQHigh() {
+            const eqGain = parseFloat(document.getElementById('eqHighGain').value);
+            if (eqHighNode) {
+                eqHighNode.gain.value = eqGain;
+            }
+        }
+
+        function updateCompression() {
+            const ratio = parseFloat(document.getElementById('compression').value);
+            if (compressor) {
+                compressor.ratio.value = ratio;
+            }
+        }
+
+        function updateGain() {
+            const gain = parseFloat(document.getElementById('masterGain').value);
+            if (gainNode) {
+                gainNode.gain.value = gain;
+            }
+        }
+
+        function updateSpeed() {
+            const speed = parseFloat(document.getElementById('speedControl').value);
+            if (sourceNode) {
+                sourceNode.playbackRate.value = speed;
+            }
+        }
+
+        function toggleAutoTune() {
+            autoTuneEnabled = !autoTuneEnabled;
+            setupAudioNodes(); // Reinitialize the audio nodes with or without auto-tune
+        }
+
+        function playAudio() {
+            if (!sourceNode) {
+                setupAudioNodes();
+            }
+            sourceNode.start();
+        }
+
+        function stopAudio() {
+            if (sourceNode) {
+                sourceNode.stop();
+                sourceNode.disconnect();
+                sourceNode = null;
+            }
+        }
+
+        function startRecording() {
+            recordedChunks = [];
+            mediaRecorder = new MediaRecorder(destination.stream);
+            mediaRecorder.ondataavailable = function(e) {
+                if (e.data.size > 0) {
+                    recordedChunks.push(e.data);
+                }
+            };
+            mediaRecorder.start();
+
+            // Start the timer
+            recordingStartTime = Date.now();
+            updateTimer();
+            recordingInterval = setInterval(updateTimer, 1000);
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            mediaRecorder.onstop = function() {
+                const blob = new Blob(recordedChunks, { type: 'audio/wav' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'recorded-audio.wav';
+                document.body.appendChild(a);
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            // Stop the timer
+            clearInterval(recordingInterval);
+            document.getElementById('timer').innerText = "Recording Time: 00:00";
+        }
+
+        function updateTimer() {
+            const currentTime = Date.now();
+            const elapsedTime = Math.floor((currentTime - recordingStartTime) / 1000);
+            const minutes = String(Math.floor(elapsedTime / 60)).padStart(2, '0');
+            const seconds = String(elapsedTime % 60).padStart(2, '0');
+            document.getElementById('timer').innerText = `Recording Time: ${minutes}:${seconds}`;
+        }
+
+        function drawVisualization() {
+            analyser.fftSize = 2048;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+            function draw() {
+                requestAnimationFrame(draw);
+                analyser.getByteTimeDomainData(dataArray);
+                canvasCtx.fillStyle = 'rgb(32, 32, 32)';
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+                canvasCtx.lineWidth = 2;
+                canvasCtx.strokeStyle = 'rgb(255, 107, 107)';
+                canvasCtx.beginPath();
+                const sliceWidth = canvas.width * 1.0 / bufferLength;
+                let x = 0;
+                for (let i = 0; i < bufferLength; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = v * canvas.height / 2;
+                    if (i === 0) {
+                        canvasCtx.moveTo(x, y);
+                    } else {
+                        canvasCtx.lineTo(x, y);
+                    }
+                    x += sliceWidth;
+                }
+                canvasCtx.lineTo(canvas.width, canvas.height / 2);
+                canvasCtx.stroke();
+            }
+            draw();
+        }
+    </script>
+      <script>
+
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+    
+    // 1. Lazy Loading Images
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+        img.setAttribute('loading', 'lazy');
+    });
+
+    // 2. Defer Non-Critical JavaScript
+    const scripts = document.querySelectorAll('script[data-defer="true"]');
+    scripts.forEach(script => {
+        const newScript = document.createElement('script');
+        newScript.src = script.src;
+        newScript.defer = true;
+        document.body.appendChild(newScript);
+    });
+
+    // 3. Minify JavaScript
+    // Minified code example (already minimized)
+    (function(){console.log("Minified JavaScript loaded!")})();
+
+    // 4. Cache Control Header
+    const metaCacheControl = document.createElement('meta');
+    metaCacheControl.httpEquiv = 'Cache-Control';
+    metaCacheControl.content = 'max-age=31536000, must-revalidate';
+    document.head.appendChild(metaCacheControl);
+
+    // 5. Asynchronous JavaScript Loading
+    const asyncScripts = document.querySelectorAll('script[data-async="true"]');
+    asyncScripts.forEach(script => {
+        const newScript = document.createElement('script');
+        newScript.src = script.src;
+        newScript.async = true;
+        document.body.appendChild(newScript);
+    });
+
+});
+
+// 6. Inline Critical CSS (can be included directly in your HTML file)
+const style = document.createElement('style');
+style.innerHTML = `
+    body { font-family: Arial, sans-serif; }
+    header { background-color: #333; color: #fff; padding: 20px; text-align: center; }
+`;
+document.head.appendChild(style);
+
+    </script>
+    <footer>
+        &copy; <span id="year"></span> 2EM_DRILL. All rights reserved.
+    </footer>
+</body>
+</html>
