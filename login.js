@@ -2,7 +2,7 @@
 
        
         const validUsername = "admin";
-        const validPassword = "pass123";
+        const validPassword = "pass1";
 
         // Messages to display
         const messages = [
