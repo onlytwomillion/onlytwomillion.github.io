@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="welcome.css">
+    <link rel="icon" href="icon.png" type="image/png">
+    
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="resize-handle" id="resizeHandle"></div>
+            <h2>Controls</h2>
+            <div id="menuList"></div>
+          <a href="index.html"><button class="gill" id="logoutButton">Logout</button></a>  
+        </div>
+        <button id="toggleSidebar" class="gills">Turn</button>
+        <div class="main-content" id="mainContent">
+            <h1 class="DRILL">Welcome to 2EM_DRILL </h1>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search...">
+            </div>
+            <div id="searchResults"></div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; <span id="year"></span> 2EM_DRILL. All rights reserved.
+    </footer>
+
+    <script src="searchengine.js"></script>
+    
+</body>
+</html>
